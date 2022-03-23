@@ -106,7 +106,13 @@ const read = async name => {
 */
 const syncAllNoLimit = async () => {
     // TODO
+
+    //Find all records in the source database
+    //Puts all elements into an array to be more easily accessed
     const target = await sourceDb.find({owner: /test/}, function(err,docs){});
+
+    //Called a forEach to more easily insert each document in the targetDb
+    //Easier as well to call sendEvent
     target.forEach(element => {
         targetDb.insert(element)
         sendEvent(element)
