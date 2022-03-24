@@ -106,10 +106,10 @@ const read = async name => {
 */
 const syncAllNoLimit = async () => {
     // TODO
-
     //Find all records in the source database
     //Puts all elements into an array to be more easily accessed
-    const target = await sourceDb.find({owner: /test/}, function(err,docs){});
+
+    const target = await sourceDb.find({owner: /t/}, function(err,docs){});
 
     //Called a forEach to more easily insert each document in the targetDb
     //Easier as well to call sendEvent
@@ -136,9 +136,9 @@ const syncAllNoLimit = async () => {
 */
  const syncAllSafely = async (batchSize, data) => {
     // FIXME: Example implementation.
-    // if (_.isNil(data)) {
-    //     data = {}
-    // }
+    if (_.isNil(data)) {
+        data = {}
+    }
 
     data.lastResultSize = -1;
     await the.while(
@@ -175,35 +175,35 @@ const synchronize = async () => {
 */
  const runTest = async () => {
 
-     await load();
+    await load();
 
-     // Check what the saved data looks like.
-     await read('GE');
+    // Check what the saved data looks like.
+    await read('GE');
 
-     EVENTS_SENT = 0;
-     await syncAllNoLimit();
+    EVENTS_SENT = 0;
+    await syncAllNoLimit();
 
-     // TODO: Maybe use something other than logs to validate use cases?
-     // Something like `assert` or `chai` might be good libraries here.
-     if (EVENTS_SENT === TOTAL_RECORDS) {
-         console.log('1. synchronized correct number of events')
+    // TODO: Maybe use something other than logs to validate use cases?
+    // Something like `assert` or `chai` might be good libraries here.
+    if (EVENTS_SENT === TOTAL_RECORDS) {
+        console.log('1. synchronized correct number of events')
     }
 
-     EVENTS_SENT = 0;
-    //  const data = await syncAllSafely(1);
+    EVENTS_SENT = 0;
+    const data = await syncAllSafely(1);
 
-     if (EVENTS_SENT === TOTAL_RECORDS) {
-         console.log('2. synchronized correct number of events')
+    if (EVENTS_SENT === TOTAL_RECORDS) {
+        console.log('2. synchronized correct number of events')
     }
 
-     // Make some updates and then sync just the changed files.
-     EVENTS_SENT = 0;
-     await the.wait(300);
-     await touch('GE');
-    //  await syncNewChanges(1, data);
+    // Make some updates and then sync just the changed files.
+    EVENTS_SENT = 0;
+    await the.wait(300);
+    await touch('GE');
+    // await syncNewChanges(1, data);
 
-     if (EVENTS_SENT === 1) {
-         console.log('3. synchronized correct number of events')
+    if (EVENTS_SENT === 1) {
+        console.log('3. synchronized correct number of events')
     }
 
 }
@@ -212,5 +212,4 @@ const synchronize = async () => {
 // Call synchronize() instead of runTest() when you have synchronize working
 // or add it to runTest().
 runTest();
-// syncAllNoLimit();
 // synchronize();
