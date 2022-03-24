@@ -127,25 +127,30 @@ const syncAllNoLimit = async () => {
 */
  const syncWithLimit = async (limit, data) => {
     // TODO
-    if(!data){
-        return data
-    }
-    let stack = []
-    for( let i = 0; i <= limit; i++){
-        stack.push(data[i]);
-        console.log(stack)
-        data.shift();
-    }
-    while(stack.length > 0){
-        let doc = stack.pop();
-        if(doc === null){
-            break
-        }
-        targetDb.insert(doc);
-        EVENTS_SENT += 1
-    }
+    console.log("the data",data)
+    console.log("the limit", limit);
 
-    return syncWithLimit(data);
+    // if(!data){
+    //     return data
+    // }
+    let stack = []
+    for( let i = 0; i < limit; i++){
+        stack.push(data[i]);
+        console.log("the stack",stack)
+        data.shift();
+        console.log("new data",data)
+    }
+    // while(stack.length > 0){
+    //     let doc = stack.pop();
+    //     if(doc === null){
+    //         break
+    //     }
+    //     targetDb.insert(doc);
+    //     EVENTS_SENT += 1
+    // }
+
+    // return syncWithLimit(data);
+    return data.lastResultSize = 0;
 }
 
 
