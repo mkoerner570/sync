@@ -79,6 +79,7 @@ const sendEvent = data => {
     EVENTS_SENT += 1;
     console.log('event being sent: ');
     console.log(data);
+    targetDb.insert(data)
 
     // TODO: Write data to targetDb
     // await targetDb.insert(data);
@@ -114,7 +115,6 @@ const syncAllNoLimit = async () => {
     //Called a forEach to more easily insert each document in the targetDb
     //Easier as well to call sendEvent
     target.forEach(element => {
-        targetDb.insert(element)
         sendEvent(element)
     });
 }
@@ -127,17 +127,35 @@ const syncAllNoLimit = async () => {
 */
  const syncWithLimit = async (limit, data) => {
     // TODO
-    return data;
+    if(!data){
+        return data
+    }
+    let stack = []
+    for( let i = 0; i <= limit; i++){
+        stack.push(data[i]);
+        console.log(stack)
+        data.shift();
+    }
+    while(stack.length > 0){
+        let doc = stack.pop();
+        if(doc === null){
+            break
+        }
+        targetDb.insert(doc);
+        EVENTS_SENT += 1
+    }
+
+    return syncWithLimit(data);
 }
 
 
 /**
 * Synchronize in batches.
 */
- const syncAllSafely = async (batchSize, data) => {
+const syncAllSafely = async (batchSize, data) => {
     // FIXME: Example implementation.
-    if (_.isNil(data)) {
-        data = {}
+    if (!data) {
+        data = await sourceDb.find({owner: /t/}, function(err,docs){});
     }
 
     data.lastResultSize = -1;
