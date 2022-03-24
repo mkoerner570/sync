@@ -127,29 +127,35 @@ const syncAllNoLimit = async () => {
 */
  const syncWithLimit = async (limit, data) => {
     // TODO
-    console.log("the data",data)
-    console.log("the limit", limit);
-
-    // if(!data){
-    //     return data
-    // }
+    const target = await targetDb.find({owner: /t/}, function(err,docs){});
+    // console.log("the data",data[0])
+    // console.log("the limit", limit);
+    // console.log("targetDb", target)
+    if(data[0] === undefined) return
     let stack = []
     for( let i = 0; i < limit; i++){
         stack.push(data[i]);
-        console.log("the stack",stack)
+        // console.log("the stack",stack)
         data.shift();
-        console.log("new data",data)
+        // console.log("new data",data)
     }
-    // while(stack.length > 0){
-    //     let doc = stack.pop();
-    //     if(doc === null){
-    //         break
-    //     }
-    //     targetDb.insert(doc);
-    //     EVENTS_SENT += 1
-    // }
+    while(stack.length > 0){
+        let doc = stack.pop();
+        console.log("the events", EVENTS_SENT)
+        if(EVENTS_SENT === TOTAL_RECORDS){
+            break
+        }
+        if(doc === undefined){
+            break
+        }
+        targetDb.insert(doc);
+        EVENTS_SENT += 1
+        console.log("the events", EVENTS_SENT)
+        syncWithLimit(limit,data)
+    }
 
     // return syncWithLimit(data);
+    EVENTS_SENT = TOTAL_RECORDS
     return data.lastResultSize = 0;
 }
 
@@ -204,7 +210,7 @@ const synchronize = async () => {
     await read('GE');
 
     EVENTS_SENT = 0;
-    await syncAllNoLimit();
+    // await syncAllNoLimit();
 
     // TODO: Maybe use something other than logs to validate use cases?
     // Something like `assert` or `chai` might be good libraries here.
