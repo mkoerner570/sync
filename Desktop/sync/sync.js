@@ -99,7 +99,10 @@ const read = async name => {
     const record = await sourceDb.findOne( { name });
     console.log("the record",record);
 };
-
+const reader = async name => {
+    const record2 = await targetDb.findOne( { name });
+    console.log("the target record",record2)
+}
 
 /**
 * Get all records out of the database and send them using
@@ -127,35 +130,38 @@ const syncAllNoLimit = async () => {
 */
  const syncWithLimit = async (limit, data) => {
     // TODO
-    const target = await targetDb.find({owner: /t/}, function(err,docs){});
-    // console.log("the data",data[0])
-    // console.log("the limit", limit);
-    // console.log("targetDb", target)
-    if(data[0] === undefined) return
-    let stack = []
-    for( let i = 0; i < limit; i++){
-        stack.push(data[i]);
-        // console.log("the stack",stack)
-        data.shift();
-        // console.log("new data",data)
-    }
-    while(stack.length > 0){
-        let doc = stack.pop();
-        console.log("the events", EVENTS_SENT)
+    // if(data[0] === undefined) return
+
+    const target = await targetDb.find({owner: /test/}, function(err,docs){});
+    while(data.length > 0){
+        let queue = []
+        for(let i = 0; i < limit; i++){
+
+            if(data[i] === undefined){
+                break
+            }
+
+            queue.push(data[i]);
+
+            data.shift();
+
+        }
+
+
+        queue.forEach(async element => {
+            console.log(element)
+            sendEvent(element)
+
+        });
+
         if(EVENTS_SENT === TOTAL_RECORDS){
             break
         }
-        if(doc === undefined){
-            break
-        }
-        targetDb.insert(doc);
-        EVENTS_SENT += 1
-        console.log("the events", EVENTS_SENT)
-        syncWithLimit(limit,data)
+
+
     }
 
-    // return syncWithLimit(data);
-    EVENTS_SENT = TOTAL_RECORDS
+
     return data.lastResultSize = 0;
 }
 
@@ -220,6 +226,10 @@ const synchronize = async () => {
 
     EVENTS_SENT = 0;
     const data = await syncAllSafely(1);
+
+    // await reader('Google')
+    // await reader('Exxon')
+    // await reader('GE')
 
     if (EVENTS_SENT === TOTAL_RECORDS) {
         console.log('2. synchronized correct number of events')
