@@ -130,13 +130,18 @@ const syncAllNoLimit = async () => {
 */
  const syncWithLimit = async (limit, data) => {
     // TODO
-    // if(data[0] === undefined) return
-
-    const target = await targetDb.find({owner: /test/}, function(err,docs){});
+    // Create a while loop queue to make batches
+    // used the length of the data array in order and shitfed them
+    // off each time to allow the loop to end
     while(data.length > 0){
+
         let queue = []
+        // For loop used in order to push docs into the queue so that the
+        // queue's length never exceeds the batch limit
         for(let i = 0; i < limit; i++){
 
+            // Placed this edge case in the loop to make sure that no
+            // undefined entries are inserted into the targetDb
             if(data[i] === undefined){
                 break
             }
@@ -149,11 +154,15 @@ const syncAllNoLimit = async () => {
 
 
         queue.forEach(async element => {
-            console.log(element)
+            // sendEvent used here as it already inserts info into the targetDb
+            // above and incremented EVENTS_SEND.
             sendEvent(element)
 
         });
 
+        console.log("End of batch")
+
+        // Breaks the loop if EVENTS_SENT equals total records.
         if(EVENTS_SENT === TOTAL_RECORDS){
             break
         }
@@ -161,7 +170,7 @@ const syncAllNoLimit = async () => {
 
     }
 
-
+    // Sets lastResultSize to 0 to break out of the loop in syncAllSafely
     return data.lastResultSize = 0;
 }
 
@@ -189,8 +198,17 @@ const syncAllSafely = async (batchSize, data) => {
  * Sync changes since the last time the function was called with
 * with the passed in data.
 */
-const syncNewChanges = async data => {
+const syncNewChanges = async (int, data) => {
     // TODO
+    target = await targetDb.find({owner: /t/}, function(err,docs){});
+    if (!data) {
+        data = await sourceDb.find({owner: /t/}, function(err,docs){});
+    }
+    console.log("in the sync",data)
+    // while(EVENTS_SENT < int){
+
+
+    // }
     return data;
 }
 
@@ -216,7 +234,7 @@ const synchronize = async () => {
     await read('GE');
 
     EVENTS_SENT = 0;
-    // await syncAllNoLimit();
+    const data = await syncAllNoLimit();
 
     // TODO: Maybe use something other than logs to validate use cases?
     // Something like `assert` or `chai` might be good libraries here.
@@ -225,7 +243,7 @@ const synchronize = async () => {
     }
 
     EVENTS_SENT = 0;
-    const data = await syncAllSafely(1);
+    // const data = await syncAllSafely(1);
 
     // await reader('Google')
     // await reader('Exxon')
@@ -239,7 +257,7 @@ const synchronize = async () => {
     EVENTS_SENT = 0;
     await the.wait(300);
     await touch('GE');
-    // await syncNewChanges(1, data);
+    await syncNewChanges(1, data);
 
     if (EVENTS_SENT === 1) {
         console.log('3. synchronized correct number of events')
