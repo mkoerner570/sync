@@ -82,7 +82,6 @@ const sendEvent = data => {
     targetDb.insert(data)
 
     // TODO: Write data to targetDb
-    // await targetDb.insert(data);
 };
 
 
@@ -90,11 +89,9 @@ const sendEvent = data => {
 const touch = async name => {
     await sourceDb.update({ name }, { $set: { owner: 'test4' } });
 };
+
 const targetTouch = async (dataName, dataOwner) => {
-    const target = await targetDb.findOne({dataName})
-    console.log(target)
     await targetDb.update({ dataName }, { $set: { owner: dataOwner } });
-    // EVENTS_SENT += 1
 }
 
 
@@ -166,6 +163,7 @@ const syncAllNoLimit = async () => {
 
         });
 
+        // Logs that each individual batch is completed
         console.log("End of batch")
 
         // Breaks the loop if EVENTS_SENT equals total records.
@@ -200,20 +198,6 @@ const syncAllSafely = async (batchSize, data) => {
 }
 
 
-const sync = async (int, data, target) => {
-    for(let i = 0; i < data.length; i++){
-        if(data[1].updatedAt === target[1].updatedAt){
-            continue
-        } else {
-            let names = data[i].name
-            let owners = data[i].owner
-            targetTouch(names,owners)
-            EVENTS_SENT += 1
-        }
-    }
-    return data
-}
-
 /**
  * Sync changes since the last time the function was called with
 * with the passed in data.
@@ -223,26 +207,43 @@ const syncNewChanges = async (int, data) => {
     // Put docs in sourceDb and targetDb in to arrays
     // This allows each entry in them to be compared.
     target = await targetDb.find({}, function(err,docs){});
+
+    // Replaces the value of the data variable in case there is nothing
+    // in data
     if (!data) {
         data = await sourceDb.find({}, function(err,docs){});
     }
 
-
+    // For loop to compare each entry to one another.
     for(let i = 0; i < data.length; i++){
+
+        // Lets the loop know that if there is no change between the two,
+        // then to continue moving through the loop.
         if(data[i].updatedAt === target[i].updatedAt){
             continue
-        } else {
-            let names = data[i].name
-            console.log("Changed name", names)
-            let owners = data[i].owner
-            console.log("Changed owner", owners);
-            targetTouch(names,owners)
+        }
+
+        // If there is a difference, then to follow these steps.
+        else {
+
+            // Calls a helper function written above to find the targetDb entry
+            // and update it to the correct information.
+            targetTouch(data[i].name,data[i].owner)
             EVENTS_SENT += 1
         }
     }
 
     return data;
 }
+/*
+Additionally, this could possibly be completed with a while loop, as when the
+function is called below, it is called with an integer value as well as the
+data value. So, a while loop would be called with the parameters being along
+the lines of while(EVENTS_SENT < int), and once more the values being filtered
+to not match. Once the values that do not match are found, then the targetDb
+would be updated accordingly and EVENTS_SENT incremented by one, eventually
+breaking the loop.
+*/
 
 
 /**
@@ -276,10 +277,6 @@ const synchronize = async () => {
 
     EVENTS_SENT = 0;
     // const data = await syncAllSafely(1)
-
-    // await reader('Google')
-    // await reader('Exxon')
-    // await reader('GE')
 
     if (EVENTS_SENT === TOTAL_RECORDS) {
         console.log('2. synchronized correct number of events')
