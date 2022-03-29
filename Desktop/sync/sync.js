@@ -90,6 +90,10 @@ const sendEvent = data => {
 const touch = async name => {
     await sourceDb.update({ name }, { $set: { owner: 'test4' } });
 };
+const targetTouch = async (dataName, dataOwner) => {
+    await targetDb.update({ dataName }, { $set: { owner: dataOwner } });
+    EVENTS_SENT += 1
+}
 
 
 /**
@@ -194,21 +198,45 @@ const syncAllSafely = async (batchSize, data) => {
 }
 
 
+const sync = async (int, data, target) => {
+    for(let i = 0; i < data.length; i++){
+        if(data[1].updatedAt === target[1].updatedAt){
+            continue
+        } else {
+            let names = data[i].name
+            let owners = data[i].owner
+            targetTouch(names,owners)
+            EVENTS_SENT += 1
+        }
+    }
+    return data
+}
+
 /**
  * Sync changes since the last time the function was called with
 * with the passed in data.
 */
 const syncNewChanges = async (int, data) => {
     // TODO
-    target = await targetDb.find({owner: /t/}, function(err,docs){});
+    target = await targetDb.find({}, function(err,docs){});
     if (!data) {
-        data = await sourceDb.find({owner: /t/}, function(err,docs){});
+        data = await sourceDb.find({}, function(err,docs){});
     }
-    console.log("in the sync",data)
-    // while(EVENTS_SENT < int){
+    console.log("the data in sync", data)
+    console.log("the target in sync", target)
 
-
-    // }
+    while(EVENTS_SENT < int){
+        for(let i = 0; i < data.length; i++){
+            if(data[1].updatedAt === target[1].updatedAt){
+                continue
+            } else {
+                let names = data[i].name
+                let owners = data[i].owner
+                targetTouch(names,owners)
+                EVENTS_SENT += 1
+            }
+        }
+    };
     return data;
 }
 
@@ -243,7 +271,7 @@ const synchronize = async () => {
     }
 
     EVENTS_SENT = 0;
-    // const data = await syncAllSafely(1);
+    // const data = await syncAllSafely(1)
 
     // await reader('Google')
     // await reader('Exxon')
