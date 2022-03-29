@@ -202,7 +202,7 @@ const syncAllSafely = async (batchSize, data) => {
  * Sync changes since the last time the function was called with
 * with the passed in data.
 */
-const syncNewChanges = async (int, data) => {
+const syncNewChanges = async (int=1, data) => {
     // TODO
     // Put docs in sourceDb and targetDb in to arrays
     // This allows each entry in them to be compared.
@@ -251,7 +251,18 @@ breaking the loop.
  * keep polling for changes.
 */
 const synchronize = async () => {
-     // TODO
+    // TODO
+    // Find the sourceDb information and places it into a variable
+    data = await sourceDb.find({}, function(err,docs){});
+
+    // Constantly calls syncNewChanges with a one second delay to let any new
+    // changes take place
+    while(data){
+        await syncNewChanges(data)
+        console.log("Synchronizing Complete");
+        await the.wait(1000)
+    }
+
 }
 
 
@@ -291,6 +302,8 @@ const synchronize = async () => {
     if (EVENTS_SENT === 1) {
         console.log('3. synchronized correct number of events')
     }
+
+    await synchronize()
 
 }
 
