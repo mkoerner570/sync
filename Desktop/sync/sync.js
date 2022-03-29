@@ -91,8 +91,10 @@ const touch = async name => {
     await sourceDb.update({ name }, { $set: { owner: 'test4' } });
 };
 const targetTouch = async (dataName, dataOwner) => {
+    const target = await targetDb.findOne({dataName})
+    console.log(target)
     await targetDb.update({ dataName }, { $set: { owner: dataOwner } });
-    EVENTS_SENT += 1
+    // EVENTS_SENT += 1
 }
 
 
@@ -218,25 +220,27 @@ const sync = async (int, data, target) => {
 */
 const syncNewChanges = async (int, data) => {
     // TODO
+    // Put docs in sourceDb and targetDb in to arrays
+    // This allows each entry in them to be compared.
     target = await targetDb.find({}, function(err,docs){});
     if (!data) {
         data = await sourceDb.find({}, function(err,docs){});
     }
-    console.log("the data in sync", data)
-    console.log("the target in sync", target)
 
-    while(EVENTS_SENT < int){
-        for(let i = 0; i < data.length; i++){
-            if(data[1].updatedAt === target[1].updatedAt){
-                continue
-            } else {
-                let names = data[i].name
-                let owners = data[i].owner
-                targetTouch(names,owners)
-                EVENTS_SENT += 1
-            }
+
+    for(let i = 0; i < data.length; i++){
+        if(data[i].updatedAt === target[i].updatedAt){
+            continue
+        } else {
+            let names = data[i].name
+            console.log("Changed name", names)
+            let owners = data[i].owner
+            console.log("Changed owner", owners);
+            targetTouch(names,owners)
+            EVENTS_SENT += 1
         }
-    };
+    }
+
     return data;
 }
 
